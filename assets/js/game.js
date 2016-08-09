@@ -143,6 +143,7 @@ var Game = {
 			newRecord.save({score:score})
 			gameoverSound.play();
 			alert('你漏掉太多榛子酥，游戏结束！\n 最终得分'+score+'，排名第'+computeRanking()+'!');
+			score = 0;
 			dropCount = 0;
 			game.state.start('Menu');
 
