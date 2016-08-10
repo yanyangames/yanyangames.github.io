@@ -1,10 +1,11 @@
-var player, cursors, ground, max_speed, stars, scoreText, sky, dropEvent, timeCheck, animation;
+var player, cursors, ground, max_speed, stars, scoreText, sky, dropEvent, timeCheck, animation, hp1, hp2, hp3;
 var allRecords = []
 var score = 0;
-var dropCount = 0;
+var hp = 3;
 var minimumCatch = 0;
 var currentCloth = 0.1;
 var specialExisted = false;
+var catchStreak = 0;
 
 Parse.initialize("QPzLZksBFJtWTmTJR6bGvKS3IGikmWaIcYlaLLYt", "8Z7sxI6h1i174BpgYV6LbZTdXejw7Iad7XuwgWob");
 
@@ -37,6 +38,9 @@ var Game = {
 		game.load.audio('transformation','assets/sound/transformation.wav');
 		game.load.audio('gameover','assets/sound/gameover.wav');
 		// game.load.audio('drop','assets/sound/drop.wav')
+		//load health heart
+		game.load.image('heartFull','assets/img/heart1.png');
+		game.load.image('heartEmpty','assets/img/heart0.png');
 
 	},
 
@@ -44,7 +48,7 @@ var Game = {
 		//add sky
 		sky = game.add.sprite(0,0,'sky');
 		//player moving speed
-		max_speed = 290;
+		max_speed = 340;
 		//add platform group
 		platforms = game.add.group();
 		platforms.enableBody = true;
@@ -64,10 +68,10 @@ var Game = {
 
 		//enable physics on player
 		game.physics.enable(player, Phaser.Physics.ARCADE);
-		player.body.bounce.y = 0.2;
-    	player.body.gravity.y = 300;
-		player.animations.add('left', [0, 1, 2, 3], 4, true);
-    	player.animations.add('right', [5, 6, 7, 8], 4, true);
+		player.body.bounce.y = 0.1;
+    	player.body.gravity.y = 370;
+		player.animations.add('left', [0, 1, 2, 3], 6, true);
+    	player.animations.add('right', [5, 6, 7, 8], 6, true);
     	//static figures animation
     	staticPlayer1.frame = 4;
 
@@ -94,18 +98,29 @@ var Game = {
     	//add score text
     	scoreText = game.add.text(16, 26, '得分: 0', { fontSize: '26px', fill: '#000' });
     	//add ranking text
-    	rankingText = game.add.text(500, 26, '排名: 0', {fontSize: '26px', fill: '#000'} )
+    	rankingText = game.add.text(470, 26, '排名: 0', {fontSize: '26px', fill: '#000'} )
     	//add sound effect
     	catchSound = game.add.audio('eat');
     	transformSound = game.add.audio('transformation');
     	gameoverSound = game.add.audio('gameover');
+    	transformSound.volume = 0.5;
     	// dropSound = game.add.audio('drop');
-    	//create animation 
-    	
+    	//create health heart
+    	// hpFull1 = game.add.sprite(game.world.width/2-60,26,'heartFull');
+    	// hpEmpty1 = game.add.sprite(game.world.width/2-60,26,'heartEmpty');
+    	// hpFull2 = game.add.sprite(game.world.width/2,26,'heartFull');
+    	// hpEmpty2 = game.add.sprite(game.world.width/2,26,'heartEmpty');
+    	// hpFull3 = game.add.sprite(game.world.width/2+60,26,'heartFull');
+    	// hpEmpty3 = game.add.sprite(game.world.width/2+60,26,'heartEmpty');
+    	hp1 = game.add.sprite(game.world.width/2-60,26,'heartFull');
+		hp2 = game.add.sprite(game.world.width/2-20,26,'heartFull');
+		hp3 = game.add.sprite(game.world.width/2+20,26,'heartFull');
 
 	},
 
 	update : function(){
+		//print health
+		printHealth();
 		//player stand on the ground
 		game.physics.arcade.collide(player,ground);
 		//when player catch star
@@ -133,7 +148,7 @@ var Game = {
 	},
 
 	checkFail : function(){
-		if(dropCount>20){
+		if(hp==0){
 			// dropEvent.pause();
 			// for(i=0;i<stars._hash.length;i++){
 			// 	stars._hash[i].body.enable = false;
@@ -144,7 +159,7 @@ var Game = {
 			gameoverSound.play();
 			alert('你漏掉太多榛子酥，游戏结束！\n 最终得分'+score+'，排名第'+computeRanking()+'!');
 			score = 0;
-			dropCount = 0;
+			hp = 3;
 			game.state.start('Menu');
 
 		}
@@ -156,20 +171,20 @@ function generateStar(){
 	var star
 	var specialKey = game.rnd.frac();
 
-	if(minimumCatch<5){
-		star = stars.create(game.world.randomX, 0 , 'star')
+	if(minimumCatch<1){
+		star = stars.create(game.world.randomX-10, 0 , 'star')
 		star.special = false;
 	}
 	
 	else if(specialKey<0.1 && specialExisted==false){
 		
-		star = stars.create(game.world.randomX, 0 , 'starspecial')
+		star = stars.create(game.world.randomX-10, 0 , 'starspecial')
 		star.special = true;
 		specialExisted = true
 	}
 	else{
 		
-		star = stars.create(game.world.randomX, 0 , 'star')
+		star = stars.create(game.world.randomX-10, 0 , 'star')
 		star.special = false;
 	}
 		
@@ -186,8 +201,12 @@ function onTouch(player,star){
 	score += 1;
 	scoreText.text = '得分: ' + score;
 	rankingText.text = '排名: '+computeRanking();
-	
-	
+	catchStreak++;
+	if(catchStreak==5 && hp<3){
+		hp++;
+		catchStreak = 0;
+	}
+
 	if(star.special==true){
 		//when star is special
 		score++;
@@ -199,6 +218,9 @@ function onTouch(player,star){
 		game.time.events.add(400,changeCloth,this);
 		minimumCatch = 0;
 		specialExisted = false;
+		if(hp<3){
+			hp++;
+		}
 		return;
 		// animation.destroy();
 		
@@ -213,8 +235,8 @@ function touchDown(ground,star){
 	}
 	star.kill();
 	// dropSound.play();
-	dropCount++;
-
+	hp--;
+	catchStreak = 0;
 }
 
 function changeCloth(){
@@ -268,6 +290,9 @@ function changeCloth(){
 
 function pause(){
 	// cursors = game.input.keyboard.disable = false;
+	if(cursors.left.isDown == true || cursors.right.isDown == true){
+		cursors.left.isDown = cursors.right.isDown = false;
+	}
 	player.body.enable = false;
 	player.frame = 4;
 	cursors.left._enabled = false;
@@ -296,4 +321,23 @@ function computeRanking(){
 	//sort records in descending order
 	recordsCopy.sort(function(a,b){return b-a})
 	return recordsCopy.indexOf(score)+1;
+}
+
+function printHealth(){
+	if(hp==3){
+		hp1.loadTexture('heartFull',0)
+		hp2.loadTexture('heartFull',0)
+		hp3.loadTexture('heartFull',0)
+	}
+	else if(hp==2){
+		hp1.loadTexture('heartFull',0)
+		hp2.loadTexture('heartFull',0)
+		hp3.loadTexture('heartEmpty',0)
+	}
+	else if(hp==1){
+		hp1.loadTexture('heartFull',0)
+		hp2.loadTexture('heartEmpty',0)
+		hp3.loadTexture('heartEmpty',0)
+	}
+	
 }
