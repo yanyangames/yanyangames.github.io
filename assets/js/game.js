@@ -49,7 +49,7 @@ var Game = {
 		//add sky
 		sky = game.add.sprite(0,0,'sky');
 		//player moving speed
-		max_speed = 220;
+		max_speed = 240;
 		console.log(max_speed)
 		//add platform group
 		platforms = game.add.group();
