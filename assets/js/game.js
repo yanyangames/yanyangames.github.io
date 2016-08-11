@@ -1,11 +1,12 @@
-var player, cursors, ground, max_speed, stars, scoreText, sky, dropEvent, timeCheck, animation, hp1, hp2, hp3;
+var player, cursors, ground, max_speed, stars, scoreText, sky, dropEvent, timeCheck, animation, hp1, hp2, hp3, pauseText;
 var allRecords = []
 var score = 0;
 var hp = 3;
 var minimumCatch = 0;
 var currentCloth = 0.1;
 var specialExisted = false;
-var catchStreak = 0;
+var dropStreak = 0;
+var pauseOrNot = false;
 
 Parse.initialize("QPzLZksBFJtWTmTJR6bGvKS3IGikmWaIcYlaLLYt", "8Z7sxI6h1i174BpgYV6LbZTdXejw7Iad7XuwgWob");
 
@@ -48,7 +49,8 @@ var Game = {
 		//add sky
 		sky = game.add.sprite(0,0,'sky');
 		//player moving speed
-		max_speed = 340;
+		max_speed = 220;
+		console.log(max_speed)
 		//add platform group
 		platforms = game.add.group();
 		platforms.enableBody = true;
@@ -92,7 +94,7 @@ var Game = {
     	game.add.tween(staticPlayer4).to( { alpha: 0 }, 1000, Phaser.Easing.Linear.None, true, 0, 0, false);
     	//create repeatly spawn star events
     	dropEvent = game.time.create(false);
-    	dropEvent.loop(1000,generateStar,this);
+    	dropEvent.loop(650,generateStar,this);
     	dropEvent.start();
     	// game.time.events.repeat(1000,1000,generateStar,this)
     	//add score text
@@ -120,6 +122,7 @@ var Game = {
 
 	update : function(){
 		//print health
+
 		printHealth();
 		//player stand on the ground
 		game.physics.arcade.collide(player,ground);
@@ -175,21 +178,21 @@ function generateStar(){
 		star = stars.create(game.world.randomX-10, 0 , 'star')
 		star.special = false;
 	}
-	
+
 	else if(specialKey<0.1 && specialExisted==false){
-		
+
 		star = stars.create(game.world.randomX-10, 0 , 'starspecial')
 		star.special = true;
 		specialExisted = true
 	}
 	else{
-		
+
 		star = stars.create(game.world.randomX-10, 0 , 'star')
 		star.special = false;
 	}
-		
+
 	star.body.gravity.y = 20 + game.rnd.frac()*30;
-	
+
 	// console.log(star.body.gravity.y);
 }
 
@@ -197,19 +200,16 @@ function onTouch(player,star){
 	// console.log('game.time.now:'+game.time.now)
 	minimumCatch++;
 	star.kill();
-	
+	dropStreak = 0;
 	score += 1;
 	scoreText.text = '得分: ' + score;
 	rankingText.text = '排名: '+computeRanking();
-	catchStreak++;
-	if(catchStreak==5 && hp<3){
-		hp++;
-		catchStreak = 0;
-	}
+
+
 
 	if(star.special==true){
 		//when star is special
-		score++;
+
 		pause();
 		animation = game.add.sprite(player.x-3,player.y+5,'transition');
 		animation.animations.add('change',null,8,false,true);
@@ -223,8 +223,8 @@ function onTouch(player,star){
 		}
 		return;
 		// animation.destroy();
-		
-		
+
+
 	}
 	catchSound.play();
 }
@@ -235,12 +235,20 @@ function touchDown(ground,star){
 	}
 	star.kill();
 	// dropSound.play();
-	hp--;
-	catchStreak = 0;
+	if(dropStreak == 0){
+		dropStreak++;
+		return;
+	}
+	else{
+		hp--;
+		dropStreak = 0;
+	}
+
+
 }
 
 function changeCloth(){
-	
+
 	var rndKey
 	// var figureArr = ['figure1','figure2','figure3','figure4','figure5']
 	// while(rndKey!=currentCloth){
@@ -249,7 +257,7 @@ function changeCloth(){
 	// }
 	// console.log('inside changeCloth')
 	while(true){
-		
+
 		rndKey = game.rnd.frac();
 		if(rndKey<0.23 && currentCloth>=0.23){
 			player.loadTexture('figure1',0)
@@ -257,17 +265,17 @@ function changeCloth(){
 
 		}
 		else if((rndKey>=0.23 && rndKey<0.46) && (currentCloth<0.23 || currentCloth>=0.46)){
-			
+
 			player.loadTexture('figure2',0)
 			break;
 		}
 		else if((rndKey>=0.46 && rndKey<0.69) && (currentCloth<0.46 || currentCloth>0.69)){
-			
-			player.loadTexture('figure3',0)	
+
+			player.loadTexture('figure3',0)
 			break;
 		}
 		else if((rndKey>=0.69 && rndKey<0.92) && (currentCloth<0.69 || currentCloth>0.92)){
-			player.loadTexture('figure4',0)	
+			player.loadTexture('figure4',0)
 			break;
 		}
 		else if(rndKey>=0.92 && currentCloth<0.92){
@@ -278,14 +286,14 @@ function changeCloth(){
 			continue;
 		}
 	}
-	
+
 	currentCloth = rndKey;
 
 	if(animation){
 		animation.destroy();
 	}
 	unpause();
-	
+
 }
 
 function pause(){
@@ -301,7 +309,7 @@ function pause(){
 	for(i=0;i<stars._hash.length;i++){
 		stars._hash[i].body.enable = false;
 	}
-	
+
 }
 
 function unpause(){
@@ -339,5 +347,20 @@ function printHealth(){
 		hp2.loadTexture('heartEmpty',0)
 		hp3.loadTexture('heartEmpty',0)
 	}
-	
+
+}
+
+window.onkeydown = function(event){
+	if(event.keyCode == 32){
+
+		game.paused = !game.paused;
+		if(!pauseOrNot){
+			pauseText = game.add.text(game.world.width/2-20, game.world.height/2-20, '暂停', { fontSize: '26px', fill: '#000' ,fonWeight:'300'});
+			pauseOrNot = !pauseOrNot;
+		}
+		else{
+			pauseText.kill()
+			pauseOrNot = !pauseOrNot;
+		}
+	}
 }

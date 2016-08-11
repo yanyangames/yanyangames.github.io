@@ -1,3 +1,7 @@
+// 源代码可以在https://github.com/yanyangames/yanyangames.github.io找到
+// 本游戏开源，在使用时请注明作者semi_mage
+// 游戏中的音频下载与https://www.freesound.org/，均可免费使用
+
 var game;
 
 game = new Phaser.Game(600,600,Phaser.AUTO,'');
@@ -13,4 +17,3 @@ game.state.add('Game_Over',Game_Over);
 game.state.start('Menu');
 
 // game.state.start('Game');
-
