@@ -160,9 +160,13 @@ var Game = {
 			var newRecord = new Records();
 			newRecord.save({score:score})
 			gameoverSound.play();
-			alert('你漏掉太多榛子酥，游戏结束！\n 最终得分'+score+'，排名第'+computeRanking()+'!');
+			alert('琰琰漏掉太多榛子酥，游戏结束！\n 最终得分'+score+'，排名第'+computeRanking()+'!');
 			score = 0;
 			hp = 3;
+			minimumCatch = 0;
+			currentCloth = 0.1;
+			specialExisted = false;
+			dropStreak = 0;
 			game.state.start('Menu');
 
 		}
