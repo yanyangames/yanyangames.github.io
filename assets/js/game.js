@@ -94,7 +94,7 @@ var Game = {
     	game.add.tween(staticPlayer4).to( { alpha: 0 }, 1000, Phaser.Easing.Linear.None, true, 0, 0, false);
     	//create repeatly spawn star events
     	dropEvent = game.time.create(false);
-    	dropEvent.loop(650,generateStar,this);
+    	dropEvent.loop(700,generateStar,this);
     	dropEvent.start();
     	// game.time.events.repeat(1000,1000,generateStar,this)
     	//add score text
